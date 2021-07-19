@@ -1,0 +1,38 @@
+---
+title: Getting started
+author: 'Lucio Cornejo'
+date: '2021-06-18'
+slug: getting-started
+categories: []
+tags: []
+subtitle: ''
+summary: 'Useful links for this new adventure'
+lastmod: '2021-06-18T03:31:48-05:00'
+---
+
+## Useful links for this new adventure
+
+- [La Matemática en la Música](http://revistas.pucp.edu.pe/index.php/promathematica/article/view/8188/8484)
+
+- [Matemática en la Musicología](http://revistas.pucp.edu.pe/index.php/promathematica/article/view/8216/8517)
+
+- [Matemáticas y música: perspectivas a través del tiempo](https://ru.dgb.unam.mx/browse?type=author&value=Montiel+Hernandez%2C+Mariana)
+
+- [Voice leading lecture series](https://www.youtube.com/user/vornskr181st/videos)
+
+- [The Distance Geometry of Music](https://arxiv.org/pdf/0705.4085.pdf)
+
+- [Mathematical Music Theory Blog](https://alpof.wordpress.com/category/music/math-music/)
+
+- [Scale Theory, Serial Theory and Voice Leading](https://www.jstor.org/stable/25171405?seq=1)
+
+- [Aspects of Well-Formed Scales](https://www.jstor.org/stable/745935?seq=1)
+
+- [The Group-Theoretic Description of 12-Fold and Microtonal Pitch Systems](https://www.jstor.org/stable/3679467?seq=1)
+
+- [La Teoria de Números y la Teoría de Grupos en el estudio de escalas musicales microtonales](https://ru.dgb.unam.mx/browse?type=author&value=Gomez+Tellez%2C+Jesus+David)
+
+- [Essential Neo-Riemannian Theory for Today's Musician](https://trace.tennessee.edu/cgi/viewcontent.cgi?referer=https://www.google.com/&httpsredir=1&article=2692&context=utk_gradthes)
+
+- [Axiomatic Scale Theory](https://www.tandfonline.com/doi/full/10.1080/17459737.2019.1696899?src=recsys&)
+

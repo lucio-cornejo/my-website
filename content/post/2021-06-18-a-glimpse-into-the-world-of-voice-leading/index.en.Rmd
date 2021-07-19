@@ -1,0 +1,696 @@
+---
+title: A glimpse into the world of Voice Leading
+author: 'Lucio Cornejo'
+date: '2021-06-18'
+slug: a-glimpse-into-the-world-of-voice-leading
+lastmod: '2021-06-18T03:54:26-05:00'
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+---
+
+```{r setup, include = FALSE}
+library(reticulate)
+knitr::knit_engines$set(python.reticulate = reticulate::eng_python)
+```
+
+I am going to describe the surprisingly interesting musical phenomenon which 
+first piqued my interest into how, from certain simple musical questions,
+unexpected patterns and relationships can emerge and even be partially explained 
+through mathematics. However, to make sure that non-musicians can get something 
+out of this post, I'll begin describing such musical phenomenon from a mathematical perspective.
+
+(PC use is recommended for reading this post; there are some issues on mobile)
+
+Consider the following experiment:
+
+1. Pick any circle.
+2. Choose a ~~chord~~ finite amount of points contained in that circle. 
+3. ~~Transpose~~ Rotate each of those ~~notes~~ points, along the chosen circle, 
+by the same amount and in equal direction (clockwise or anticlockwise).
+4. **We'll discuss this step later in the post**, but the main idea of the following graphs is that every point which has been colored corresponds to a ~~chord~~ finite set of points in the circle, which satisfies the main property that I'll explain at length later in this post.
+
+**Now comes the good stuff ...**
+
+```{python python-code-for-musical-graphs, echo = FALSE}
+from __future__ import division
+import numpy as np
+import math
+
+###### OBTENER LOS ACORDES NECESARIOS PARA EL CASO ANY FINITE CHORD SIZE ######
+
+def ordenamiento(lista):
+  # Let's assume that lista is already sorted
+  # and that it has at least two elements.
+  temporal = []
+  for i in range(len(lista)-1):
+      temporal.append([lista[0],lista[i+1]])
+    
+  return temporal
+    
+def acordes(lista,longitud_acorde):
+  # Let's assume that lista is already sorted
+  # and that it has at least two elements.
+    
+  # It holds acordes(lista,2) = ordenamiento(lista) .
+    
+  if longitud_acorde == 2:
+      return ordenamiento(lista)    
+  else:
+      temporal = acordes(lista[1:],-1+longitud_acorde)
+      for i in temporal:
+          i.insert(0,lista[0])  
+        
+      for j in range(2,len(lista)-1,1):
+          temp = acordes(lista[j:],-1+longitud_acorde)
+          for i in temp:
+              i.insert(0,lista[0])  
+          temporal = temporal + temp
+      return temporal
+            
+    
+################# GRAFICAR EN BASE AL CONTRARY MOTION DEGREE #################
+
+metric = -1    # Common musical sense of distance.
+EDO = 360
+
+def arclenght(a,b):
+    temp = b%(2*np.pi)-a
+    if abs(temp)>np.pi:
+        if temp>0:
+            temp = temp - 2*np.pi
+        else:
+            temp =  temp + 2*np.pi
+    return temp
+            
+    
+def dist(a,b,metric):
+    if metric == -1:
+        return arclenght(a,b) 
+    if metric == -2:
+        # Voice leading trigonometric formula
+        return math.acos(np.cos(b-a))
+    if metric == -3:
+        # Directional arc lenght trigonometric formula
+        return 2*math.atan(np.tan((b-a)/2.0))
+    if metric == -4:
+        # Euclidean type metrics
+        #blank = (np.cos(a)-np.cos(b))**power + (np.sin(a)-np.sin(b))**power
+        #return pow(blank,1.0/power)
+        blank = [abs(np.cos(a)-np.cos(b)),abs(np.sin(a)-np.sin(b))]
+        return max(blank)
+
+
+def CPM(theta,Y,metric):  # Cyclic permutations matrix 
+    m = len(Y)
+    T = [(Y[i]+theta) for i in range(m)]
+    GT = []
+    GT.append(T)
+    for i in range(1,m,1):
+        temp = [T[(k+i)%m] for k in range(m)]
+        GT.append(temp)
+    
+    mat = [[] for k in range(m)]
+    for i in range(m):
+        for j in range(m):
+            mat[i].append(dist(Y[j],GT[i][j],metric))
+            
+    if abs(theta-np.pi)<0.001:
+        for j in range(m):
+            mat[0][j] = abs(mat[0][j])
+        # This is kinda unnecesary seems the minimum
+        # voice leading will probably not happen
+        # with the voice motion of the first row,
+        # because that's the most spread out voice leading
+        # out of all the cases of the GT.
+                 
+    VL = [0 for i in range(m)]   
+    RS = [0 for i in range(m)]
+    minimal = 0
+    
+    for i in range(m):
+        for j in range(m):
+            VL[i] = VL[i] + abs(mat[i][j])
+            RS[i] = RS[i] + mat[i][j]
+           
+        if VL[i] < VL[minimal]:
+            minimal = i
+            
+    # Convert radians into the appropiate EDO tuning system
+    rescale_1 = [i*(EDO/(2*np.pi)) for i in VL]
+    rescale_2 = [i*(EDO/(2*np.pi)) for i in RS]
+     
+    # Contrary Motion Degree
+    CMD = [rescale_1[i]-abs(rescale_2[i]) for i in range(m)]    
+        
+    return [rescale_1,CMD,minimal]
+
+
+def graphic_data(chord_size,rotation,even_uno,even_dos,partition_precision):
+  chord_size = int(chord_size) 
+  partition_precision = int(partition_precision)
+  even_uno = int(even_uno)
+  even_dos = int(even_dos)
+  temp = chord_size*partition_precision
+  axis_X = [i*((2*np.pi)/temp) for i in range(0,temp,1)]
+  
+  rotation = rotation*(np.pi/180)
+  chords = acordes(axis_X,chord_size)
+  
+  # List positions of most even chord of chord_size notes:
+  # n*partition_precision, for n in {0,1,2, ... ,chord_size}
+  edo_angle_1 = axis_X[even_uno*partition_precision]
+  edo_angle_2 = axis_X[even_dos*partition_precision]
+  
+  if chord_size == 5:
+      chords = [chords[i] for i in range(len(chords)) if edo_angle_1 in chords[i] ]
+  elif chord_size == 6:
+      chords = [chords[i] for i in range(len(chords)) if (edo_angle_1 in chords[i]) and (edo_angle_2 in chords[i]) ]
+  
+  areas = []
+  area_size = 1
+  results = []
+  minimum_voice_leadings = []
+  
+  for i in range(len(chords)):
+      temp = CPM(rotation,chords[i],metric)
+      minimum_voice_leadings.append(temp[0][temp[2]])
+      results.append(temp[1][temp[2]]) #########################################
+      if abs(results[i])<0.001:
+          areas.append(area_size)
+      else:
+          areas.append(0)
+          
+  # Positions related to the chords with contrary motion during such voice leading
+  positions = []
+  for i in range(len(areas)):
+      if areas[i] == 1: 
+          positions.append(i)
+      
+  # Relevant voice leadings
+  minimum_voice_leadings = [minimum_voice_leadings[i] for i in positions]
+        
+  rotation = round(rotation*(180/np.pi),3) # From radians to degress
+          
+  if chord_size == 2:
+      # Convert radians to EDO semitones
+      axis_X = [ chords[i][1]*(EDO/(2*np.pi))  for i in positions ]
+      axis_Y = [ 0 for i in positions ]
+      axis_Z = [ 0 for i in positions ]
+      
+  elif chord_size == 3:
+      # Convert radians to EDO semitones
+      axis_X = [ chords[i][1]*(EDO/(2*np.pi))  for i in positions ]
+      axis_Y = [ chords[i][2]*(EDO/(2*np.pi))  for i in positions ]
+      axis_Z = [ 0 for i in positions ] # minimum_voice_leadings
+
+  elif chord_size == 4:
+      # Convert radians to EDO semitones
+      axis_X = [ chords[i][1]*(EDO/(2*np.pi))  for i in positions ]
+      axis_Y = [ chords[i][2]*(EDO/(2*np.pi))  for i in positions ] 
+      axis_Z = [ chords[i][3]*(EDO/(2*np.pi))  for i in positions ]
+  
+  elif chord_size == 5:
+      for i in chords:
+          i.remove(edo_angle_1)
+          
+      axis_X = [ chords[i][1]*(EDO/(2*np.pi))  for i in positions ]
+      axis_Y = [ chords[i][2]*(EDO/(2*np.pi))  for i in positions ]
+      axis_Z = [ chords[i][3]*(EDO/(2*np.pi))  for i in positions ]
+      
+  elif chord_size == 6:
+      for i in chords:
+          i.remove(edo_angle_1)
+          i.remove(edo_angle_2)
+      
+      axis_X = [ chords[i][1]*(EDO/(2*np.pi))  for i in positions ]
+      axis_Y = [ chords[i][2]*(EDO/(2*np.pi))  for i in positions ]
+      axis_Z = [ chords[i][3]*(EDO/(2*np.pi))  for i in positions ]
+      
+  return [axis_X,axis_Y,axis_Z,minimum_voice_leadings,EDO,chord_size,rotation]
+        
+```
+```{r music-graph, echo = FALSE}
+music_graph <- function(chord_size,rotation,even_uno,even_dos){
+  
+  partition_precision <- 0
+  if(chord_size < 4){
+    partition_precision <- 20
+  }
+  if(chord_size == 4){
+    partition_precision <- 15
+  }
+  if(chord_size == 5){
+    partition_precision <- 8
+  }
+  if(chord_size == 6){
+    partition_precision <- 7
+  }
+  
+  datos <- py$graphic_data(chord_size,rotation,even_uno,even_dos,partition_precision)
+  x <- unlist(datos[1])  
+  y <- unlist(datos[2])  
+  z <- unlist(datos[3])
+  edo <- unlist(datos[5])
+  chord_size <- unlist(datos[6])
+  rotation <- unlist(datos[7])
+  
+  voice_leadings <- as.numeric(unlist(datos[4]))
+
+  library(plotly)
+  datos <- data.frame(X = x, Y = y, Z = z, voice_leading_size = voice_leadings) 
+  
+  fig <- plot_ly(datos, x = ~X, y = ~Y, z = ~Z, opacity = 0.7, mode = "markers",
+                 text = ~paste0("Minimal voice leading size: ", round(voice_leading_size,3),
+                                " degrees"),
+                        hoverinfo = text,
+               marker = list(
+                        size = 2.5, color = ~voice_leading_size,
+                        colorscale = list(c(0,1),c("rgb(105, 149, 237)",
+                                                   "rgb(255, 34, 34)")),
+                        showcase = TRUE
+                        )
+                )
+  fig <- fig %>% add_markers()
+  fig <- fig %>% layout(title = paste("\n Chord size: ",chord_size,
+                                "      Rotation: ", round(rotation,3), " degrees"),
+            scene = list(xaxis = list(title = 'X',range = c(0,edo) ),
+           yaxis = list(title = 'Y',range = c(0,edo) ), zaxis = list(title = 'Z',
+           range = c(0,edo)), camera = list(center = list(x = 0,y = 0,z = 0),
+           eye = list(x = 1.25,y = 1.25,z = 1.25),
+           up = list(x = 2.5,y = 0,z = 1))),
+           annotations = list(x = 1.0, y = 1.0, text = '', showarrow = FALSE )
+           )
+  fig
+}
+```
+```{r graphics, message = FALSE, echo = TRUE}
+# Display interactive graph 1
+music_graph(2,150,0,0)
+
+# Display interactive graph 2
+music_graph(3,90,0,0)
+
+# Display interactive graph 3
+music_graph(4,120,0,0)
+``` 
+\
+
+Reader: *Ok, so what the hell was that?*
+
+Author: *Yeah ... sorry for the spoilers. Now I'll provide the necessary background to understand step 4 and the graphs shown.*
+
+\
+
+## Visual examples
+
+From a musical perspective, we'll be dealing with **chords** (finite sets
+of at least two distinct notes) and their **transpositions** (translating them
+by some distance), but, from a mathematical perspective, we'll be working with
+points in a circle (the border, not the inside) and rotating them by some angle.
+
+For simplicity, we'll work with the unitary circle, the circle with radius 1 
+and whose center is the origin of the Cartesian Plane.
+Each point in the unitary circle can be thought of as a possible musical note,
+if we conveniently match them.  
+
+In that sense, let's work with the following pairing:
+
+<!--
+Creating a table using HTML 
+-->
+
+<table>
+  <tr>
+    <th> Note </th>
+    <td> C  </td>
+    <td> Db </td>
+    <td> D  </td>
+    <td> Eb </td>
+    <td> E  </td>
+    <td> F  </td>
+    <td> Gb </td>
+    <td> G  </td>
+    <td> Ab </td>
+    <td> A  </td>
+    <td> Bb </td>
+    <td> B  </td>
+  </tr>
+  <tr>
+    <th> Angle </th>
+    <td> $ (0/12)*360^{°} $ </td>
+    <td> $ (1/12)*360^{°} $ </td>
+    <td> $ (2/12)*360^{°} $ </td>
+    <td> $ (3/12)*360^{°} $ </td>
+    <td> $ (4/12)*360^{°} $ </td>
+    <td> $ (5/12)*360^{°} $ </td>
+    <td> $ (6/12)*360^{°} $ </td>
+    <td> $ (7/12)*360^{°} $ </td>
+    <td> $ (8/12)*360^{°} $ </td>
+    <td> $ (9/12)*360^{°} $ </td>
+    <td> $ (10/12)*360^{°}$ </td>
+    <td> $ (11/12)*360^{°}$ </td>
+  </tr>
+</table>
+
+\ 
+
+Let's start with a simple case: Rotating the chord "C major" by \(90^{°}\; .\)
+
+Such chord is comprised of the notes C, E and G; notes which we can represent 
+in the Cartesian Plane (given the note \( \equiv \) angle pairing
+we have already established) as the following points:
+
+C : \( \left(\cos(0^{°}),\sin(0^{°})\right) \)
+
+E : \( \left(\cos(120^{°}),\sin(120^{°})\right) \)
+
+G : \( \left(\cos(210^{°}),\sin(210^{°})\right) \)
+
+However, it's much simpler to represent chords not by the coordinates of the 
+points which comprise such chord, but by the unique angles,
+inside \([\,0^{°};360^{°}\,[\;\), associated to those points.\
+In that sense, let's work with the following equivalence: \
+C major \(\equiv\) {C; E; G} \(\equiv (0,120,210) \; ,\) \
+where the angles in the **vector representation** of the chord will be written
+in degrees and from lowest to highest angle.
+
+Now, let's rotate each of the points which comprise C major by \( 90^{°} \) 
+with respect to the origin, as we can see in the following video, 
+where the initial points shown (in green) correspond to the notes 
+C, E and G, in that order.
+
+<video width = 100% controls>
+  <source src = "acorde_0.mp4" type = "video/mp4">
+</video>
+
+From a musical perspective, we've **transposed** the C major chord by \
+\( 90^{°} = \frac{360^°}{4} \equiv \frac{12 \text{ semitones}}{4} = 
+3 \text{ semitones }\)
+and landed on Eb major, but, mathematically, we can think of having 
+**rotated** the initial chord.
+
+The **set of trajectories** that the notes/points from C major take 
+*along the unitary circle* to get to the notes in Eb major is called the 
+**voice leading** between C major and Eb major. 
+
+Let me clarify that the voice leadings which we'll be dealing with in this post are precisely those which satisfy that 
+**no pair of distinct notes from the initial chord end up at the same note in the transposed chord.** 
+In that sense, when we tranpose/rotate any chord made up of \( n \) notes, 
+the number of possible voice leadings between such chord and its transposition
+is precisely 
+\( n! = n\cdot(n-1)\cdot(\dots)\cdot 2 \cdot 1 \enspace\).
+<br> That's because every note \(x\) in the initial chord is moving (in a voice
+leading) to a note \( y \) in the transposed chord, unique to \(x\).
+That means that no other note from the initial chord is also moving to \( y\,\); 
+therefore, combinatorics is all we need. \
+**Curious fact:** We actually only need to check \(n\) special kinds of voice
+leadings, not \( n! \), in order to find one which is, at least, a minimal voice
+leading.
+The justification comes from a mathematical theorem which we'll explore further 
+in the next post, where it will play a **key role**. If you are interested,
+you can read about it in this [article](https://www.jstor.org/stable/25171405) .
+
+\
+
+Going back to our concrete case, let's see some voice leading examples for the 
+transposition from C major to Eb major in the following video:
+
+<video width = 100% controls>
+  <source src = "acorde_1.mp4" type = "video/mp4">
+</video>
+
+Notice from the video that the trajectories which define the voice leading correspond 
+to the shortest of the two paths that a point could have taken to get to the other.
+In the case where both paths have the same length, that is, for a \( 180^{°} \)
+rotation, we'll choose, as a convention, the anticlockwise trajectory
+to be a part of the voice leading.
+
+In this post, we'll focus on two properties that we'd like a voice leading (*VL*)
+between a chord and some of its transpositions to have:
+
+1. The sum of the **length of the trajectories** which define *VL*, also known as the **voice leading size**, is the **smallest one** out of all the possible voice leadings between the initial chord and its transposition. <br> Any voice leading which satisfies this property is said to be a **minimal voice leading**.
+2. The trajectories which define *VL* share the same direction, that is, they are 
+**all clockwise** or **all anticlockwise**. <br> Any voice leading which satisfies this 
+property is said to have **no contrary motion**.
+
+Partly, what I've shown you in the initial graphs is which chords, of some fixed 
+chord size, satisfy that after transposing/rotating them by a certain amount,
+there exists a voice leading, between the initial and transposed chord, that is
+a *minimal voice leading* and *has no contrary motion*. If some chord satisfies 
+such property, we'll say that it has an **unidirectional minimal voice leading**.
+
+I wouldn't blame you if you were just thinking the following:
+<br> "Why would a minimal voice leading be unidirectional?.
+<br> The properties 1. and 2. do **NOT** seem related at all".
+<br> You'd be partly right, in fact, because the property 1. deals with 
+minimizing trajectories' lenghts, while the property 2. refers only to such 
+trajectories' directions.
+
+However, both properties happen to be fairly related, and even extremely related
+when we focus on \( 180^{°} \) rotations of chords, a situation where symmetry 
+arises with respect to the possible voice leadings. But, such connection will
+be explored in the next post because that's a deep subject as well.
+
+\
+
+Let's get back to our example, rotating the C major by \( 90^{°} \).
+<br> Does it exist an unidirectional minimal voice leading in that case?
+
+After checking by hand the \( 3! = 6 \,\) possible voice leadings, 
+we actually find one unidirectional minimal voice leading, the one that I
+labeled as *voice leading 3*. 
+Such voice leading is comprised of *clockwise trajectories* and it has a voice 
+leading size of \( 90^{°}\; . \) \
+Of course, there is some ambiguity with respect to the direction of the 
+trajectory in *voice leading 3* which has a size of \(0^{°}\); but, we can 
+ignore its direction (in the same way that the number zero has no sign)
+when we are checking if some voice leading is a unidirectional minimal 
+voice leading. The other trajectories in *voice leading 3* have the same
+direction, so that's all that matters to us. \
+Notice that *voice leading 1*  and *voice leading 2* fail to be minimal
+voice leadings because their respective voice leading sizes,
+\( 90^{°} \cdot 3 = 180^{°}\;
+\text{ and }
+\: 150^{°} + 180^{°} + 120^{°} = 450^{°}  \), are greater than the voice leading
+size of the minimal voice leading that I already presented (*voice leading 3*).\
+Also note that *voice leading 1* has no contrary motion but *voice leading 2*
+does have contrary motion.
+
+\
+
+## Putting it all together
+
+We are 80% ready to understand the graphs shown previously.
+
+The **first step** is to **choose a chord size** (\(n\)), that is,
+the amount of distinct points in a circle that we will be rotating afterwards.
+
+The **second step** is to **chose some rotation** ('rotation'), a value between
+\( 0^{°} \) and \(360^{°} \), that we will apply to *'all'* chords with 
+the size already chosen.
+
+In that sense, if we use the vector representation of chords via their angles,
+as we did with C major '=' \( (0^{°},120^{°},210^{°}) \), the domain of the 
+function, *music_graph(...)*, function from which these graphs shown come from,
+would be 
+\[
+\left\{\,
+(x_0,x_1,x_2, \dots ,x_{n-1}) \in \mathbb{R}^{n} \, : \,\
+0 \leq x_0 < x_1 < \dots < x_{n-1} < 360
+\,\right\}
+\]
+
+However, we can be more efficient and work only with a special subset of such 
+domain, which would be the new domain of *music_graph(..)*, yet still achieve 
+our goal of finding for which chords of size \(n\) there exists an unidirectional
+minimal voice leading when they are rotated by 'rotation'.
+Such efficiency is a direct result of the following:
+
+
+**Important property: ** If there exists a unidirectional minimal voice leading
+with respect to some rotation \(\theta\) of some chord \(X\), then there also
+exists a unidirectional minimal voice leading with respect to the rotation
+\(\theta\) of any chord which is itself some rotation of \(X\).
+
+As a consequence, based on the fact that for the rotation \( 60^{°} \) of the
+C major chord, which we can label via its angles as \( (0^{°},120^{°},210^{°})\),
+there exists a unidirectional minimal voice leading, if we were to rotate also by
+\(60^{°}\) chords whose angles are of the form
+\( ( (0+\alpha)^{°},(120+\alpha)^{°},(210+\alpha)^{°})\), where \(\alpha\) can
+be any real number, then there would also exist at least one unidirectional 
+minimal voice leading for those chords.
+
+This means that the domain of *music_graph(...)* can be reduced in one dimension,
+after which it would take the following form as the new domain of 
+*music_graph(...)*:
+
+\[\left\{\,
+(0,x_1,x_2, \dots ,x_{n-1})\in \mathbb{R}^{n} \, : \,
+0 < x_1 < \dots < x_{n-1} < 360
+\,\right\}\,\,\dots\,(\triangle)\,\,\]
+
+The **third step** is to check, for every chord 
+\((0,x_1,x_2, \dots ,x_{n-1})\,\) in \((\triangle)\)
+if there exists an unidirectional minimal voice leading after rotating such
+chord by 'rotation'. 
+<br> Practically, we can't check each of those chords, because
+there's an infinite amount of them, but the computer will check a sufficient 
+amount so that we can accurately approximate how the graph of *music_graph(...)*
+actually looks like.
+<br> Let's denote the set of chords in \((\triangle)\) for which 
+there exists an unidirectional minimal voice leading after rotating those chords
+by 'rotation', as  *'success'*.
+
+The **fourth step** is displaying, **appropriately**, on the 3-dimensional space 
+\(\mathbb{R}^3\,\) the elements of *'success'*. 
+Allow me to explain the main 4 cases:
+
+Case \(n = 2\): 
+<br> The domain in \((\triangle)\) becomes
+\(\left\{\,
+(0,x)\in\mathbb{R^2}\, : \,
+0 < x < 360
+\,\right\}\,.\)
+<br> The elements of *'success'* are special chords represented by 
+\( (0,\bar{x})\), with \(0<\bar{x}<360\). 
+Such chords will be displayed to be in *'success'* via coloring the points
+\((\bar{x},0,0) \in \mathbb{R}^3\,\,.\)
+The last two zeros in \((\bar{x},0,0) \) I added them in for simplicity only,
+they aren't important.
+
+Case \(n = 3\): 
+<br> The domain in \((\triangle)\) becomes
+\(\left\{\,
+(0,x,y)\in\mathbb{R^3}\, : \,
+0 < x  < y < 360
+\,\right\}\,.\)
+<br> The elements of *'success'* are special chords represented by 
+\( (0,\bar{x},\bar{y})\), with \(0<\bar{x}<\bar{y}<360\). 
+Such chords will be displayed to be in *'success'* via coloring the points
+\((\bar{x},\bar{y},0) \in \mathbb{R}^3\,\,.\)
+The last zero in \((\bar{x},\bar{y},0) \) I added in for simplicity only,
+it's not important.
+
+Case \(n = 4\): 
+<br> The domain in \((\triangle)\) becomes
+\(\left\{\,
+(0,x,y,z)\in\mathbb{R^4}\, : \,
+0 < x  < y < z < 360
+\,\right\}\,.\)
+<br> The elements of *'success'* are special chords represented by 
+\( (0,\bar{x},\bar{y},\bar{z})\), with \(0<\bar{x}<\bar{y}<\bar{z}<360\). 
+Such chords will be displayed to be in *'success'* via coloring the points
+\((\bar{x},\bar{y},\bar{z}) \in \mathbb{R}^3\,\,.\)
+
+Case \(4 < n \leq 6\):
+<br> We've runned out of dimensions, because now the graphs are either
+4 dimensional or 5 dimensional. 
+For that reason, in order to be able to visualize the graph 
+in a 3 dimensional space, \( n-4 \) of the variables in 
+\( (0,x_1,x_2, \dots ,x_{n-1}) \) will need to be chosen in advance and
+be kept fixed during the **third step**.
+<br> Which angles will remain fixed is what the last two numbers in 
+the command *music_graph(...)* refer to.
+
+\
+
+How to interpret the function 
+music_graph(chord_size, rotation, \(m_1\), \(m_2\)) :
+<br> We already know what *chord_size* and *rotation* refer to.
+<br> The extra caveat to consider is that the chords represented in 
+\((\triangle)\) must contain the angles 
+\( \frac{m_1}{\text{chord_size}}\cdot 360^{°}\,\, \) and
+\(\,\,\frac{m_2}{\text{chord_size}}\cdot 360^{°}\,\) . 
+
+Now you can see why in the case \(m_1 = m_2 = 0\) we didn't need to fix
+any angle in \((\triangle)\), because the angle \( \,0^{°}\) is already present
+in those chords which we are considering.
+
+The **fifth step**, the final one, is to color appropriately the points
+displayed in the **fourth step**. 
+<br> After having chosen the parameters in 
+*music_graph(chord_size, rotation, \(m_1\), \(m_2\))* and doing all the
+first 4 steps just mentioned, we established a finite set of points 
+to represent/approximate \((\triangle)\), after which we selected a subset of it,
+let's call it *'success_approximation'*, which represents/approximates *'success'*.
+Each element of the finite set *'success_approximation'* has a certain minimal 
+voice leading size, so, I'll define a coloring based on such 
+minimal voice leading sizes. 
+<br> **Blue** will be the color of the displayed point
+(**fourth step**) for which its associated chord had the *smallest* minimal
+voice leading size (min_VL) with respect to the minimal voice leading sizes of all 
+the chords in *'success_approximation'*.
+<br> **Red** will be the color of the displayed point
+(**fourth step**) for which its associated chord had the *biggest* minimal
+voice leading size (max_VL) with respect to the minimal voice leading sizes of all 
+the chords in *'success_approximation'*. 
+<br> The other points displayed in the **fourth step** will be colored with
+a color between blue and red, depending on the position of their minimal voice
+leading size in the interval \( [\,\text{ min_VL };\text{ max_VL }\,]\,\, . \)
+
+Notice that there may be more than one chord in *'success_approximation'*
+with the smallest (or biggest) minimal voice leading size, out of the minimal
+voice leading sizes of all the chords in *'success_approximation'*.
+<br> Besides this, it may also be the case that, for certain parameters in 
+*music_graph(chord_size, rotation, \(m_1\), \(m_2\))*, all the chords in
+*'success_approximation' * have precisely the same minimal voice leading size.
+In that case, all the displayed points (**fourth step**) would be colored 
+in **purple**.
+
+\
+
+Of course, we don't have to stop at the case of chords with size 6,
+we could consider, for example, chords of size 666 and so on.
+However, I only coded the function *music_graph(...)* till chord size 6,
+so that's the limit for now.
+
+I encourage you to play around with the graphics in this post. 
+For example, notice the bizarre fact that each of the graphs shown 
+contains regions where the minimal voice leading size remains constant, 
+that is, where the coloring applied doesn't change.
+
+\
+
+In conclusion, I hope that after reading this post, you've gained some 
+appreciation for music. We only focused on rotating points along a circle,
+while checking for certain properties of the trajectories of the points,
+a very simple problem indeed; yet, the graphs shown displayed no 
+simplicity whatsoever. Do we even know which mathematical equation determines 
+the shape of the graphs? From what I've researched online, 
+it's not known publicly.
+<br> I **do** know that precise mathematical equation, but I'd rather not share
+it till I present it in my undergraduate thesis.
+
+\
+
+**Thanks for reading!**
+<br> This post took a huge amount of work, so I am glad you made it till here.
+<br> I'll implement an online graph calculator (probably in early August) so that 
+you can play around changing the inputs of the function *music_graph(...)* 
+and see what bizarre shapes come into existence.
+
+For now, I can leave you with some more graph examples in case you are curious
+about how other cases look like:
+
+<!--
+## Randomly generated graphs for the curious mind
+
+I'll now include five graphs which change everytime you reload the page,
+so that you can play around with more examples and hopefully understand 
+the phenomenon described in this post much better.
+-->
+
+```{r extra-graphics, message = FALSE, echo = TRUE}
+music_graph(2,90,0,0)
+music_graph(2,180,0,0)
+music_graph(3,65,0,0)
+music_graph(3,180,0,0)
+music_graph(4,155,0,0)
+music_graph(4,180,0,0)
+music_graph(5,55,2,0)
+music_graph(6,35,2,3)
+music_graph(6,180,3,4)
+```

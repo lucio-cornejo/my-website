@@ -1,0 +1,247 @@
+---
+title: A generalization of the Circle of Fifths Light and Dark interpretation
+author: ''
+date: '2021-05-31'
+slug: []
+categories: []
+tags: []
+description: ''
+topics: []
+---
+
+# Well-formed scales
+
+OBJECTIVE: Understand why the use of the words "bright" and "dark" by
+		   Jacob Collier, with respect to movements in the circle of
+		   fifths, is not a arbitrary as simply refering to 
+		   clockwise or anticlockwise movement.
+
+
+
+
+In this doucment we'll be using the set theoretic notation for scales.
+
+Example: C major scale: {0, 2, 4, 5, 7, 9, 11}
+		 You could think of this notation as considering the 12 basic notes
+		 as "hours" in a clock, and labelling them via
+		 C = 0, Db = 1, D = 2, ..., A = 9, Bb = 10, B = 11, C = 12 "=" 0.
+
+
+QUESTION: Why does it exist a "circle of fiths" analogue for the
+		  pentatonic scale, scale which can be created by stacking
+		  4 perfect fifths; but, the "circle of fifths" version of
+		  a scale created via stacking 5 perfect fifths 
+		  does not work as well?
+
+
+ANSWER:  We'll need to define three main ideas in order to explain 
+		 what's going on with such scales: Well-formedness, upshift
+		 and downshift.
+
+
+Let's work only with 3 types scales, all of them created by stacking
+a distinct amount of perfect fifths, and we'll label them as follows:
+	Major scale: MAJOR
+	Major pentatonic scale: ma. pen.
+	Major scale without its "fourth": ma. bad
+							Example: C major scale, but without the F.
+
+|--------------------------------------------------------------------|
+| Scale name  |  number of perfect fifths stacked  | number of notes |
+|-------------|------------------------------------|-----------------|
+|--- MAJOR----|--------------- 6 ------------------|------- 7 -------|
+|-- Ma. pen.--|--------------- 4 ------------------|------- 5 -------|
+|-- Ma. bad---|--------------- 5 ------------------|------- 6 -------|
+|--------------------------------------------------------------------|
+
+
+We'll only need to focus on 3 cases for each scale as well.
+Let's write their notes, but starting from C (0), not always from the root.
+
+F MAJOR: { 0, 2, 4, 5, 7, 9, 10 }   ... (a) 
+C MAJOR: { 0, 2, 4, 5, 7, 9, 11 }
+G MAJOR: { 0, 2, 4, 6, 7, 9, 11 }
+
+F ma. pen.: {  0, 2, 5, 7, 9 }      ... (b)
+C ma. pen.: {  0, 2, 4, 7, 9 }
+G ma. pen.: { 11, 2, 4, 7, 9 }
+
+F ma. bad: {  0, 2, 4, 5, 7, 9  }   ... (c)
+C ma. bad: {  0, 2, 4, 7, 9, 11 }
+G ma. bad: { 10, 2, 4, 6, 7, 9  }
+
+
+Maybe now you can start to suspect which property the ma. bad
+scale lacks, compared to the othe two scales, so, let's define
+a pair of operations which will make the phenomenon clearer.
+
+Upshift: It's a certain process between any pair of chords
+		 X and Y, after which we get a new chord, which is 
+		 contained in Y. It works like this:
+
+		 Start from any note in X, move up till you reach a note
+		 contained in Y.
+		 Do that for every note in X. Then, the resulting set
+		 of notes at which we stopped form a chord, which we will
+		 refer to as the upshift from X to Y and label as U(X,Y).
+
+Downshift: Consider two chords, X and Y.
+
+		   Start from any note in X, move down till you reach a note
+		   contained in Y.
+		   Do that for every note in X. Then, the resulting set
+		   of notes at which we stopped form a chord, which we will
+		   refer to as the downshift from X to Y and label D(X,Y).
+
+Examples:
+
+- U(F MAJOR, C MAJOR) = C MAJOR. (see (a))
+  In this case, every note in F MAJOR stays put during the upshift,
+  except for Bb (10), which goes up to the B (11) in C.
+
+- U(F ma. bad, C ma. bad) = { 0, 2, 4, 7, 9 },
+  which is different from C ma. ba.
+
+- D(F MAJOR, G MAJOR) = { 0, 2, 4, 7, 9 }, different from G MAJOR.
+
+Now we can express more clearly the problem which arised in (c).
+You should check by yourself the following properties: .... (***)
+
+	Major scale case:
+	D(C MAJOR, F MAJOR) = F MAJOR    (anticlockwise movement in the circle of fifths)
+	U(C MAJOR, G MAJOR) = G MAJOR    (clockwise movement in the circle of fifths)
+
+	Major pentatonic scale case:
+	D(C ma. pen., G ma. pen.) = G ma. pen
+	U(C ma. pen., F ma. pen.) = F ma. pen
+
+	Ma. bad scale case:
+	D(C ma. bad, F ma. bad) = {0,2,4,7,9}  (not F ma. bad)
+	U(C ma. bad, F ma. bad) = {0,2,4,7,9}  (not F ma. bad)
+	D(C ma. bad, G ma. bad) = {2,4,7,9,10} (not G ma. bad)
+	U(C ma. bad, G ma. bad) = {2,4,7,9}    (bruh)
+
+WHAAAT??!!
+
+Let's be precise about the pattern in (***).
+We start with the circle of fifths and a type of scale "temp" (MAJOR, ma. pen, etc).
+For (***) to work, we need one of the following cases to be true:
+
+0) D(C "temp", F "temp") = F "temp" 
+and U(C "temp", G "temp") = G "temp"
+
+1) D(C "temp", G"temp") = G "temp"
+and U(C "temp",F "temp") = F "temp"
+
+
+Finally, let's define the property which both MAJOR and ma. pen.
+have, but ma. bad lacks. Such property is the cause this phenomenon.
+
+Well-formedness: A scale is said to be well-formed if every non zero
+				 generic interval of such scale consists of exactly
+				 two distinct sizes.
+
+The major scale is well-formed, so, let's use it as an example in 
+order to understand what "generic interval" means.
+
+Example:
+
+C major scale
+
+------------------------------------------
+|-- Notes -- | C | D | E | F | G | A | B |  
+|- Degrees - | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+------------------------------------------
+
+The word "generic interval" alludes to the fact that, if we
+choose a distance d between the degrees of our scale, the
+notes associated to such degrees aren't always the same distance apart.
+
+Pick, for example, d = 2. Then, we have to check all the distances 
+between the notes corresponding to the following degrees:
+
+d = 2: (Thirds)
+
+Degress | Notes   | Distance
+
+1 and 3: C and E -> 4 semitones
+2 and 4: D and F -> 3 semitones
+3 and 5: E and G -> 3 semitones
+4 and 6: F and A -> 4 semitones
+5 and 7: G and B -> 4 semitones
+6 and 1: A and C -> 3 semitones
+7 and 2: B and D -> 3 semitones
+
+Then, for the generic interval d = 2, there are only two type
+of distances: 3 and 4 semitones.
+
+As a last example of generic interval, let's pick d = 4 and
+check for the smallest distances between the respective notes.
+
+d = 4: (Fifths)
+
+Degress | Notes   | Distance
+
+1 and 5: C and G -> 5 semitones
+2 and 6: D and A -> 5 semitones
+3 and 7: E and B -> 5 semitones
+4 and 1: F and C -> 5 semitones
+5 and 2: G and D -> 5 semitones
+6 and 3: A and E -> 5 semitones
+7 and 4: B and F -> 6 semitones
+
+Once again, there are only two types of distances: 5 and 6 semitones.
+
+Due to the major scale being well-formed, if you check all the types
+of generic intervals, that is; d = 1,2,3,4,5,6; then, for each value
+of d there are only two types of distances.
+
+
+Finally, it turns out that both the major scale and the major pentatonic
+scale, for which the pattern in (***) works, are well-formed. 
+However, ma. bad is NOT well-formed, and the pattern in (***) fails.
+
+I am 95% sure that the property in (***) only happens for
+scales which are well-formed.
+
+So, the only thing left to check is that the ma. bad scale is not
+well-formed.
+
+-----------------------------------------
+| - C ma. bad - | C | D | E | G | A | B |
+| -- Degrees -- | 1 | 2 | 3 | 4 | 5 | 6 |
+-----------------------------------------
+
+Let's check the cases for the generic interval d = 1:
+
+Degress | Notes   | Distance
+1 and 2: C and D -> 2 semitones 
+2 and 3: D and E -> 2 semitones
+3 and 4: E anf G -> 3 semitones
+4 and 5: G and A -> 2 semitones
+5 and 6: A and B -> 2 semitones
+6 and 1: B and C -> 1 semitone
+
+We got THREE different types of distance.
+Therefore, ma. bad is not well-formed.
+
+
+LAST REMARK:
+
+For the usual Circle of Fifths related to the major scale, 
+Jacob denotes the clocwise movement as "bright" and the
+anticlockwise movement as "dark". 
+
+Remember that humans tend to correlate melodies going UP
+with "happier" vibes, and, melodies going DOWN with "sad" feels.
+
+Thanks to such correlation and (***), the words that Jacob uses
+for the circle of fifths related to the major scale kind of
+make sense.
+
+However, for that same reason, if we were to consider a 
+Circle of Fifths related to the the major pentatonic scale,
+we'd have to label clockwise movement as "dark" and anticlockwise
+movement as "bright".
+
+THANKS!!!
