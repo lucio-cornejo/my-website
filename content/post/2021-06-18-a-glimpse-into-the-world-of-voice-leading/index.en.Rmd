@@ -515,10 +515,10 @@ with respect to some rotation \(\theta\) of some chord \(X\), then there also
 exists a unidirectional minimal voice leading with respect to the rotation
 \(\theta\) of any chord which is itself some rotation of \(X\).
 
-As a consequence, based on the fact that for the rotation \( 60^{°} \) of the
+As a consequence, based on the fact that for the rotation \( 90^{°} \) of the
 C major chord, which we can label via its angles as \( (0^{°},120^{°},210^{°})\),
 there exists a unidirectional minimal voice leading, if we were to rotate also by
-\(60^{°}\) chords whose angles are of the form
+\(90^{°}\) chords whose angles are of the form
 \( ( (0+\alpha)^{°},(120+\alpha)^{°},(210+\alpha)^{°})\), where \(\alpha\) can
 be any real number, then there would also exist at least one unidirectional 
 minimal voice leading for those chords.
